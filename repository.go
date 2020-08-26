@@ -154,12 +154,12 @@ func (repository *Repository) ExistsByID(ctx context.Context, id uuid.UUID) (boo
 	})
 }
 
-// Insert inserts a given map into the Repository's collection.
+// Insert inserts a given structure into the Repository's collection.
 //
-// It decodes the map into an object that has the same type as the Repository's
+// It decodes the structure into an object that has the same type as the Repository's
 // base type, which is subsequently inserted into the collection.
 //
-// It fails if the provided map cannot be decoded into the Repository's base type,
+// It fails if obj cannot be decoded into the Repository's base type,
 // or if there is an internal MongoDB error.
 //
 func (repository *Repository) Insert(ctx context.Context, obj interface{}) (*mongo.InsertOneResult, error) {
@@ -174,12 +174,12 @@ func (repository *Repository) Insert(ctx context.Context, obj interface{}) (*mon
 	return collection.InsertOne(ctx, newObj)
 }
 
-// InsertMany inserts a given variadic number of maps into the Repository's collection.
+// InsertMany inserts a given variadic number of structures into the Repository's collection.
 //
-// It decodes the map into objects that have the same type as the Repository's
+// It decodes the structures into objects that have the same type as the Repository's
 // base type, which are subsequently inserted into the collection.
 //
-// It fails if the provided map cannot be decoded into the Repository's base type,
+// It fails if an element of obj cannot be decoded into the Repository's base type,
 // or if there is an internal MongoDB error.
 //
 func (repository *Repository) InsertMany(ctx context.Context, obj ...interface{}) (*mongo.InsertManyResult, error) {
