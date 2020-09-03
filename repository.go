@@ -271,7 +271,6 @@ func (repository *Repository) DeleteMany(ctx context.Context, f interfaces.Filte
 func (repository *Repository) DeleteByID(ctx context.Context, id uuid.UUID) (*mongo.DeleteResult, error) {
 	return repository.Delete(ctx, map[string]interface{}{
 		repository.idField: id,
-		repository.idField: id,
 	})
 }
 
