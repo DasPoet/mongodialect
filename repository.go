@@ -44,7 +44,7 @@ type Repository struct {
 	Driver     *Driver     // a pointer to a Driver which is used to connect to the database
 }
 
-// NewRepository returns a new repository upon validating the given base type and driver.
+// NewRepository returns a new Repository upon validating the given base type and Driver.
 //
 // If the provided ID field is an empty string, the default Mongo ID ("_id") is used instead.
 //
@@ -79,6 +79,22 @@ func NewRepository(baseType interface{}, driver *Driver, collection string, idFi
 		collection: collection,
 		Driver:     driver,
 	}, nil
+}
+
+// InitialiseNewRepository builds all components needed for and combines them into a Repository.
+//
+// see NewRepository
+//
+func InitialiseNewRepository(baseType interface{}, port uint, hostname, database, collection, idField string) (*Repository, error) {
+	url := NewDatabaseURL(hostname, port)
+
+	driver := NewDriver(url, database)
+
+	if err := driver.OpenConnection(context.Background()); err != nil {
+		return nil, err
+	}
+
+	return NewRepository(baseType, driver, collection, idField)
 }
 
 // Type returns a pointer to the type Repository's base type, which has the same
