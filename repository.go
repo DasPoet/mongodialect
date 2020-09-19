@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/informatik-q2/mongodialect/interfaces"
 	"github.com/mitchellh/mapstructure"
 	"go.mongodb.org/mongo-driver/bson"
@@ -132,7 +131,7 @@ func (repository *Repository) Find(ctx context.Context, f interfaces.Filter) ([]
 //  1. no object is found (in which case ErrorObjectNotFound is returned), or
 //  2. multiple objects are found (in which case ErrorMultipleMatches is returned).
 //
-func (repository *Repository) FindByID(ctx context.Context, id uuid.UUID) (interface{}, error) {
+func (repository *Repository) FindByID(ctx context.Context, id interface{}) (interface{}, error) {
 	matches, err := repository.Find(ctx, map[string]interface{}{
 		repository.idField: id,
 	})
@@ -164,7 +163,7 @@ func (repository *Repository) Exists(ctx context.Context, f interfaces.Filter) (
 //
 // It fails if the queried data cannot be decoded, or if there is an internal MongoDB error.
 //
-func (repository *Repository) ExistsByID(ctx context.Context, id uuid.UUID) (bool, error) {
+func (repository *Repository) ExistsByID(ctx context.Context, id interface{}) (bool, error) {
 	return repository.Exists(ctx, map[string]interface{}{
 		repository.idField: id,
 	})
@@ -254,7 +253,7 @@ func (repository *Repository) Update(ctx context.Context, f interfaces.Filter, c
 //
 // It fails if there is an internal MongoDB error.
 //
-func (repository *Repository) UpdateByID(ctx context.Context, id uuid.UUID, changes map[string]interface{}) (*mongo.UpdateResult, error) {
+func (repository *Repository) UpdateByID(ctx context.Context, id interface{}, changes map[string]interface{}) (*mongo.UpdateResult, error) {
 	return repository.Update(ctx, map[string]interface{}{
 		repository.idField: id,
 	}, changes)
@@ -284,7 +283,7 @@ func (repository *Repository) DeleteMany(ctx context.Context, f interfaces.Filte
 //
 // It fails if there is an internal MongoDB error.
 //
-func (repository *Repository) DeleteByID(ctx context.Context, id uuid.UUID) (*mongo.DeleteResult, error) {
+func (repository *Repository) DeleteByID(ctx context.Context, id interface{}) (*mongo.DeleteResult, error) {
 	return repository.Delete(ctx, map[string]interface{}{
 		repository.idField: id,
 	})
