@@ -1,29 +1,29 @@
 package mongodialect
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"github.com/informatik-q2/mongodialect/interfaces"
-	"github.com/mitchellh/mapstructure"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"reflect"
-	"strings"
+    "context"
+    "errors"
+    "fmt"
+    "github.com/informatik-q2/mongodialect/interfaces"
+    "github.com/mitchellh/mapstructure"
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/mongo"
+    "reflect"
+    "strings"
 )
 
 var (
-	// ErrorDriverNil occurs when a given driver is nil
-	ErrorDriverNil = errors.New("driver must no be nil")
+    // ErrorDriverNil occurs when a given driver is nil
+    ErrorDriverNil = errors.New("driver must no be nil")
 
-	// ErrorCollectionEmpty occurs when the name of a given collection is empty
-	ErrorCollectionEmpty = errors.New("collection must not be ''")
+    // ErrorCollectionEmpty occurs when the name of a given collection is empty
+    ErrorCollectionEmpty = errors.New("collection must not be ''")
 
-	// ErrorObjectNotFound occurs when a lookup does not yield a result
-	ErrorObjectNotFound = errors.New("object was not found")
+    // ErrorObjectNotFound occurs when a lookup does not yield a result
+    ErrorObjectNotFound = errors.New("object was not found")
 
-	// ErrorMultipleMatches occurs when a lookup using a given ID yields more than one result
-	ErrorMultipleMatches = errors.New("multiple matches for ID")
+    // ErrorMultipleMatches occurs when a lookup using a given ID yields more than one result
+    ErrorMultipleMatches = errors.New("multiple matches for ID")
 )
 
 // A Repository wraps the Driver and provides functionality for performing
@@ -37,10 +37,10 @@ var (
 // contained in the specific collection to access.
 //
 type Repository struct {
-	baseType   interface{} // the type of the data structure stored in the collection; must be a pointer
-	idField    string      // the name of the field containing the underlying object's ID
-	collection string      // the name of the collection to access
-	Driver     *Driver     // a pointer to a Driver which is used to connect to the database
+    baseType   interface{} // the type of the data structure stored in the collection; must be a pointer
+    idField    string      // the name of the field containing the underlying object's ID
+    collection string      // the name of the collection to access
+    Driver     *Driver     // a pointer to a Driver which is used to connect to the database
 }
 
 // NewRepository returns a new Repository upon validating the given base type and Driver.
@@ -52,32 +52,32 @@ type Repository struct {
 // It also fails if the provided collection is an empty string.
 //
 func NewRepository(baseType interface{}, driver *Driver, collection string, idField string) (*Repository, error) {
-	if driver == nil {
-		return nil, ErrorDriverNil
-	}
+    if driver == nil {
+        return nil, ErrorDriverNil
+    }
 
-	if strings.EqualFold(strings.Trim(collection, " "), "") {
-		return nil, ErrorCollectionEmpty
-	}
+    if collection == "" {
+        return nil, ErrorCollectionEmpty
+    }
 
-	rt := reflect.TypeOf(baseType)
-	kind := rt.Kind()
+    rt := reflect.TypeOf(baseType)
+    kind := rt.Kind()
 
-	if kind != reflect.Ptr {
-		return nil, fmt.Errorf("baseType must be a pointer, not '%s'", kind)
-	}
+    if kind != reflect.Ptr {
+        return nil, fmt.Errorf("baseType must be a pointer, not '%s'", kind)
+    }
 
-	// fallback to Mongo's default ID
-	if strings.EqualFold(strings.Trim(idField, " "), "") {
-		idField = "_id"
-	}
+    // fallback to Mongo's default ID
+    if idField == "" {
+        idField = "_id"
+    }
 
-	return &Repository{
-		baseType:   baseType,
-		idField:    idField,
-		collection: collection,
-		Driver:     driver,
-	}, nil
+    return &Repository{
+        baseType:   baseType,
+        idField:    idField,
+        collection: collection,
+        Driver:     driver,
+    }, nil
 }
 
 // InitialiseNewRepository builds all components needed for and combines them into a Repository.
@@ -85,21 +85,21 @@ func NewRepository(baseType interface{}, driver *Driver, collection string, idFi
 // see NewRepository
 //
 func InitialiseNewRepository(baseType interface{}, port uint, hostname, database, collection, idField string) (*Repository, error) {
-	url := NewDatabaseURL(hostname, port)
+    url := NewDatabaseURL(hostname, port)
 
-	driver := NewDriver(url, database)
+    driver := NewDriver(url, database)
 
-	if err := driver.OpenConnection(context.Background()); err != nil {
-		return nil, err
-	}
+    if err := driver.OpenConnection(context.Background()); err != nil {
+        return nil, err
+    }
 
-	return NewRepository(baseType, driver, collection, idField)
+    return NewRepository(baseType, driver, collection, idField)
 }
 
 // Type returns a pointer to the type Repository's base type, which has the same
 // type as the data stored in the Repository's collection.
 func (repository *Repository) Type() interface{} {
-	return repository.baseType
+    return repository.baseType
 }
 
 // Find decodes all documents in the Repository's collection that match a given filter.
@@ -110,15 +110,15 @@ func (repository *Repository) Type() interface{} {
 // It fails if the queried data cannot be decoded, or if there is an internal MongoDB error.
 //
 func (repository *Repository) Find(ctx context.Context, f interfaces.Filter) ([]interface{}, error) {
-	collection := getCollection(repository)
+    collection := getCollection(repository)
 
-	cursor, err := collection.Find(ctx, f)
+    cursor, err := collection.Find(ctx, f)
 
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        return nil, err
+    }
 
-	return decodeCursor(repository, cursor)
+    return decodeCursor(repository, cursor)
 }
 
 // FindByID returns a document in the Repository's collection that has a given ID.
@@ -132,22 +132,22 @@ func (repository *Repository) Find(ctx context.Context, f interfaces.Filter) ([]
 //  2. multiple objects are found (in which case ErrorMultipleMatches is returned).
 //
 func (repository *Repository) FindByID(ctx context.Context, id interface{}) (interface{}, error) {
-	matches, err := repository.Find(ctx, map[string]interface{}{
-		repository.idField: id,
-	})
+    matches, err := repository.Find(ctx, map[string]interface{}{
+        repository.idField: id,
+    })
 
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        return nil, err
+    }
 
-	switch l := len(matches); {
-	case l == 0:
-		return nil, ErrorObjectNotFound
-	case l > 1:
-		return nil, ErrorMultipleMatches
-	}
+    switch l := len(matches); {
+    case l == 0:
+        return nil, ErrorObjectNotFound
+    case l > 1:
+        return nil, ErrorMultipleMatches
+    }
 
-	return matches[0], nil
+    return matches[0], nil
 }
 
 // Exists returns whether an object matching a given filter exists.
@@ -155,8 +155,8 @@ func (repository *Repository) FindByID(ctx context.Context, id interface{}) (int
 // It fails if the queried data cannot be decoded, or if there is an internal MongoDB error.
 //
 func (repository *Repository) Exists(ctx context.Context, f interfaces.Filter) (bool, error) {
-	matches, err := repository.Find(ctx, f)
-	return len(matches) > 0, err
+    matches, err := repository.Find(ctx, f)
+    return len(matches) > 0, err
 }
 
 // ExistsByID returns whether at least one object having a given ID exists.
@@ -164,9 +164,9 @@ func (repository *Repository) Exists(ctx context.Context, f interfaces.Filter) (
 // It fails if the queried data cannot be decoded, or if there is an internal MongoDB error.
 //
 func (repository *Repository) ExistsByID(ctx context.Context, id interface{}) (bool, error) {
-	return repository.Exists(ctx, map[string]interface{}{
-		repository.idField: id,
-	})
+    return repository.Exists(ctx, map[string]interface{}{
+        repository.idField: id,
+    })
 }
 
 // Insert inserts a given structure into the Repository's collection.
@@ -178,15 +178,15 @@ func (repository *Repository) ExistsByID(ctx context.Context, id interface{}) (b
 // or if there is an internal MongoDB error.
 //
 func (repository *Repository) Insert(ctx context.Context, obj interface{}) (*mongo.InsertOneResult, error) {
-	collection := getCollection(repository)
+    collection := getCollection(repository)
 
-	newObj, err := decodeIntoBase(repository, obj)
+    newObj, err := decodeIntoBase(repository, obj)
 
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        return nil, err
+    }
 
-	return collection.InsertOne(ctx, newObj)
+    return collection.InsertOne(ctx, newObj)
 }
 
 // InsertMany inserts a given variadic number of structures into the Repository's collection.
@@ -198,21 +198,21 @@ func (repository *Repository) Insert(ctx context.Context, obj interface{}) (*mon
 // or if there is an internal MongoDB error.
 //
 func (repository *Repository) InsertMany(ctx context.Context, obj ...interface{}) (*mongo.InsertManyResult, error) {
-	collection := getCollection(repository)
+    collection := getCollection(repository)
 
-	decoded := make([]interface{}, len(obj))
+    decoded := make([]interface{}, len(obj))
 
-	for i, o := range obj {
-		newObj, err := decodeIntoBase(repository, o)
+    for i, o := range obj {
+        newObj, err := decodeIntoBase(repository, o)
 
-		if err != nil {
-			return nil, err
-		}
+        if err != nil {
+            return nil, err
+        }
 
-		decoded[i] = newObj
-	}
+        decoded[i] = newObj
+    }
 
-	return collection.InsertMany(ctx, decoded)
+    return collection.InsertMany(ctx, decoded)
 }
 
 // Update updates at most one document in the Repository's collection
@@ -224,26 +224,26 @@ func (repository *Repository) InsertMany(ctx context.Context, obj ...interface{}
 // It fails if there is an internal MongoDB error.
 //
 func (repository *Repository) Update(ctx context.Context, f interfaces.Filter, changes map[string]interface{}) (*mongo.UpdateResult, error) {
-	collection := getCollection(repository)
+    collection := getCollection(repository)
 
-	filterMap(repository, changes)
+    filterMap(repository, changes)
 
-	if len(changes) == 0 {
-		return &mongo.UpdateResult{
-			MatchedCount:  0,
-			ModifiedCount: 0,
-			UpsertedCount: 0,
-			UpsertedID:    nil,
-		}, nil
-	}
+    if len(changes) == 0 {
+        return &mongo.UpdateResult{
+            MatchedCount:  0,
+            ModifiedCount: 0,
+            UpsertedCount: 0,
+            UpsertedID:    nil,
+        }, nil
+    }
 
-	updates := bson.D{
-		{
-			"$set", changes,
-		},
-	}
+    updates := bson.D{
+        {
+            "$set", changes,
+        },
+    }
 
-	return collection.UpdateOne(ctx, f, updates)
+    return collection.UpdateOne(ctx, f, updates)
 }
 
 // UpdateByID updates at most one document in the Repository's collection that has
@@ -254,9 +254,9 @@ func (repository *Repository) Update(ctx context.Context, f interfaces.Filter, c
 // It fails if there is an internal MongoDB error.
 //
 func (repository *Repository) UpdateByID(ctx context.Context, id interface{}, changes map[string]interface{}) (*mongo.UpdateResult, error) {
-	return repository.Update(ctx, map[string]interface{}{
-		repository.idField: id,
-	}, changes)
+    return repository.Update(ctx, map[string]interface{}{
+        repository.idField: id,
+    }, changes)
 }
 
 // Delete deletes at most one document in the Repository's collection matching a given filter.
@@ -264,9 +264,9 @@ func (repository *Repository) UpdateByID(ctx context.Context, id interface{}, ch
 // It fails if there is an internal MongoDB error.
 //
 func (repository *Repository) Delete(ctx context.Context, f interfaces.Filter) (*mongo.DeleteResult, error) {
-	collection := getCollection(repository)
+    collection := getCollection(repository)
 
-	return collection.DeleteOne(ctx, f)
+    return collection.DeleteOne(ctx, f)
 }
 
 // DeleteMany deletes all documents in the Repository matching a given filter.
@@ -274,9 +274,9 @@ func (repository *Repository) Delete(ctx context.Context, f interfaces.Filter) (
 // It fails if there is an internal MongoDB error.
 //
 func (repository *Repository) DeleteMany(ctx context.Context, f interfaces.Filter) (*mongo.DeleteResult, error) {
-	collection := getCollection(repository)
+    collection := getCollection(repository)
 
-	return collection.DeleteMany(ctx, f)
+    return collection.DeleteMany(ctx, f)
 }
 
 // DeleteByID deletes at most one document in the Repository's collection having a given ID.
@@ -284,17 +284,17 @@ func (repository *Repository) DeleteMany(ctx context.Context, f interfaces.Filte
 // It fails if there is an internal MongoDB error.
 //
 func (repository *Repository) DeleteByID(ctx context.Context, id interface{}) (*mongo.DeleteResult, error) {
-	return repository.Delete(ctx, map[string]interface{}{
-		repository.idField: id,
-	})
+    return repository.Delete(ctx, map[string]interface{}{
+        repository.idField: id,
+    })
 }
 
 // getCollection returns a handle to the Repository's collection.
 func getCollection(repository *Repository) *mongo.Collection {
-	database := repository.Driver.Client.Database(repository.Driver.Database)
-	collection := database.Collection(repository.collection)
+    database := repository.Driver.Client.Database(repository.Driver.Database)
+    collection := database.Collection(repository.collection)
 
-	return collection
+    return collection
 }
 
 // decodeIntoBase takes a map and decodes it into an object that has the same type
@@ -303,48 +303,48 @@ func getCollection(repository *Repository) *mongo.Collection {
 // It fails if the map cannot be decoded.
 //
 func decodeIntoBase(repository *Repository, obj interface{}) (interface{}, error) {
-	t := repository.baseType
-	rt := reflect.TypeOf(t).Elem()
+    t := repository.baseType
+    rt := reflect.TypeOf(t).Elem()
 
-	newObj := reflect.New(rt).Interface()
+    newObj := reflect.New(rt).Interface()
 
-	err := mapstructure.Decode(obj, &newObj)
-	return newObj, err
+    err := mapstructure.Decode(obj, &newObj)
+    return newObj, err
 }
 
 // filterMap removes all entries from a given map that are not struct fields of
 // the Repository's base type.
 func filterMap(repository *Repository, obj map[string]interface{}) {
-	t := repository.baseType
-	rt := reflect.TypeOf(t).Elem()
+    t := repository.baseType
+    rt := reflect.TypeOf(t).Elem()
 
-	// maps from bson field name to real field name
-	fieldMappings := make(map[string]string)
+    // maps from bson field name to real field name
+    fieldMappings := make(map[string]string)
 
-	for i := 0; i < rt.NumField(); i++ {
-		field := rt.Field(i)
-		fieldName := field.Name
+    for i := 0; i < rt.NumField(); i++ {
+        field := rt.Field(i)
+        fieldName := field.Name
 
-		bsonTag, ok := field.Tag.Lookup("bson")
+        bsonTag, ok := field.Tag.Lookup("bson")
 
-		switch ok {
-		case false:
-			fieldMappings[fieldName] = fieldName
-		case true:
-			bsonName := strings.Split(strings.Trim(bsonTag, " "), ",")[0]
-			fieldMappings[bsonName] = fieldName
-		}
-	}
+        switch ok {
+        case false:
+            fieldMappings[fieldName] = fieldName
+        case true:
+            bsonName := strings.Split(strings.Trim(bsonTag, " "), ",")[0]
+            fieldMappings[bsonName] = fieldName
+        }
+    }
 
-	for k := range obj {
-		realName := fieldMappings[k]
+    for k := range obj {
+        realName := fieldMappings[k]
 
-		_, ok := rt.FieldByName(realName)
+        _, ok := rt.FieldByName(realName)
 
-		if !ok {
-			delete(obj, k)
-		}
-	}
+        if !ok {
+            delete(obj, k)
+        }
+    }
 }
 
 // decodeCursor takes a cursor and decodes it into a slice of objects that
@@ -353,20 +353,20 @@ func filterMap(repository *Repository, obj map[string]interface{}) {
 // It fails if the cursor cannot be fully decoded.
 //
 func decodeCursor(repository *Repository, cursor *mongo.Cursor) ([]interface{}, error) {
-	var matches []interface{}
+    var matches []interface{}
 
-	t := repository.baseType
-	rt := reflect.TypeOf(t).Elem()
+    t := repository.baseType
+    rt := reflect.TypeOf(t).Elem()
 
-	for cursor.Next(context.Background()) {
-		r := reflect.New(rt).Interface()
+    for cursor.Next(context.Background()) {
+        r := reflect.New(rt).Interface()
 
-		if err := cursor.Decode(r); err != nil {
-			return nil, err
-		}
+        if err := cursor.Decode(r); err != nil {
+            return nil, err
+        }
 
-		matches = append(matches, r)
-	}
+        matches = append(matches, r)
+    }
 
-	return matches, nil
+    return matches, nil
 }
