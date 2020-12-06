@@ -41,10 +41,10 @@ var (
 // of the data structure contained in the
 // specific collection to access.
 type Repository struct {
-    baseType   interface{} // the type of the data structure stored in the collection; must be a pointer
-    idField    string      // the name of the field containing the underlying value's id
-    collection string      // the name of the collection to access
-    Driver     *Driver     // the Driver used to connect to the database
+    baseType   reflect.Type // the type of the data structure stored in the collection; must be a pointer
+    idField    string       // the name of the field containing the underlying value's id
+    collection string       // the name of the collection to access
+    Driver     *Driver      // the Driver used to connect to the database
 }
 
 // NewRepository returns a new Repository upon
@@ -57,7 +57,7 @@ type Repository struct {
 // the provided base type is not a pointer.
 //
 // It also fails if collection is an empty string.
-func NewRepository(baseType interface{}, driver *Driver, collection string, idField string) (*Repository, error) {
+func NewRepository(baseType reflect.Type, driver *Driver, collection string, idField string) (*Repository, error) {
     if driver == nil {
         return nil, ErrorDriverNil
     }
@@ -66,10 +66,7 @@ func NewRepository(baseType interface{}, driver *Driver, collection string, idFi
         return nil, ErrorCollectionEmpty
     }
 
-    rt := reflect.TypeOf(baseType)
-    kind := rt.Kind()
-
-    if kind != reflect.Ptr {
+    if kind := baseType.Kind(); kind != reflect.Ptr {
         return nil, fmt.Errorf("baseType must be a pointer, not '%s'", kind)
     }
 
@@ -90,7 +87,7 @@ func NewRepository(baseType interface{}, driver *Driver, collection string, idFi
 // needed for and combines them into a Repository.
 //
 // see NewRepository
-func InitialiseNewRepository(baseType interface{}, port uint, hostname, database, collection, idField string) (*Repository, error) {
+func InitialiseNewRepository(baseType reflect.Type, port uint, hostname, database, collection, idField string) (*Repository, error) {
     url := NewDatabaseURL(hostname, port)
     driver := NewDriver(url, database)
 
@@ -102,7 +99,7 @@ func InitialiseNewRepository(baseType interface{}, port uint, hostname, database
 
 // Type returns a pointer to r's base type, which has
 // the same type as the data stored in r's collection.
-func (r *Repository) Type() interface{} {
+func (r *Repository) Type() reflect.Type {
     return r.baseType
 }
 
@@ -278,10 +275,8 @@ func collection(r *Repository) *mongo.Collection {
 // decodeIntoBase decodes v into a new value of r's
 // base type. v must be a pointer to a map or struct.
 func decodeIntoBase(r *Repository, v interface{}) (interface{}, error) {
-    t := r.baseType
-    rt := reflect.TypeOf(t).Elem()
-
-    dec := reflect.New(rt).Interface()
+    el := r.baseType.Elem()
+    dec := reflect.New(el).Interface()
 
     err := mapstructure.Decode(v, &dec)
     return dec, err
@@ -290,14 +285,13 @@ func decodeIntoBase(r *Repository, v interface{}) (interface{}, error) {
 // filterMap removes all entries from v that
 // do not refer to fields of r's base type.
 func filterMap(r *Repository, v map[string]interface{}) {
-    t := r.baseType
-    rt := reflect.TypeOf(t).Elem()
+    el := r.baseType.Elem()
 
     // maps from bson field name to real field name
     fieldMappings := make(map[string]string)
 
-    for i := 0; i < rt.NumField(); i++ {
-        field := rt.Field(i)
+    for i := 0; i < el.NumField(); i++ {
+        field := el.Field(i)
 
         fieldName := field.Name
         bsonTag, ok := field.Tag.Lookup("bson")
@@ -312,7 +306,7 @@ func filterMap(r *Repository, v map[string]interface{}) {
     }
     for k := range v {
         realName := fieldMappings[k]
-        _, ok := rt.FieldByName(realName)
+        _, ok := el.FieldByName(realName)
         if !ok {
             delete(v, k)
         }
@@ -325,12 +319,10 @@ func filterMap(r *Repository, v map[string]interface{}) {
 // It fails if cur cannot be fully decoded.
 func decodeCursor(r *Repository, cur *mongo.Cursor) ([]interface{}, error) {
     var matches []interface{}
-
-    t := r.baseType
-    rt := reflect.TypeOf(t).Elem()
+    el := r.baseType.Elem()
 
     for cur.Next(context.Background()) {
-        r := reflect.New(rt).Interface()
+        r := reflect.New(el).Interface()
         if err := cur.Decode(r); err != nil {
             return nil, err
         }

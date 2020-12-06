@@ -7,7 +7,7 @@ import (
 )
 
 func TestRepository_Insert(t *testing.T) {
-    result, err := testRepository.Insert(context.Background(), obiMapKenobi)
+    result, err := testRepository.Insert(context.Background(), obi)
 
     if err != nil {
         t.Error(err)
@@ -17,7 +17,7 @@ func TestRepository_Insert(t *testing.T) {
 }
 
 func TestRepository_InsertMany(t *testing.T) {
-    result, err := testRepository.InsertMany(context.Background(), obiMapKenobi, aniMapSkywalker)
+    result, err := testRepository.InsertMany(context.Background(), obi, ani)
 
     if err != nil {
         t.Error(err)

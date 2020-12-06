@@ -2,7 +2,6 @@ package test
 
 import (
     "context"
-    "github.com/fatih/structs"
     "github.com/google/uuid"
     "github.com/informatik-q2/mongodialect"
     "github.com/informatik-q2/mongodialect/interfaces"
@@ -14,30 +13,26 @@ const (
     port     = 27017
 )
 
-type testvect struct {
+type testDocument struct {
     ID      uuid.UUID `bson:"ID, omitempty"`
     Name    string    `bson:"name, omitempty"`
     Surname string    `bson:"surname, omitempty"`
     Age     uint      `bson:"age, omitempty"`
 }
 
-var obi = testvect{
+var obi = testDocument{
     ID:      uuid.MustParse("822989de-fb98-40f8-a7e3-459277108b67"),
     Name:    "General",
     Surname: "Kenobi",
     Age:     1,
 }
 
-var ani = testvect{
+var ani = testDocument{
     ID:      uuid.MustParse("f2c17a29-6ff6-4c9a-914f-ae635c84db89"),
     Name:    "General",
     Surname: "Skywalker",
     Age:     0,
 }
-
-var obiMapKenobi = structs.Map(obi)
-
-var aniMapSkywalker = structs.Map(ani)
 
 func makeRepository() interfaces.Repository {
     uri := mongodialect.NewDatabaseURL(hostname, port)
@@ -47,7 +42,7 @@ func makeRepository() interfaces.Repository {
         panic(err)
     }
 
-    repository, err := mongodialect.NewRepository(&testvect{}, driver, "test", "ID")
+    repository, err := mongodialect.NewRepository(&testDocument{}, driver, "test", "ID")
 
     if err != nil {
         panic(err)

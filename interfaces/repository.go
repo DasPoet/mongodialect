@@ -1,5 +1,7 @@
 package interfaces
 
+import "reflect"
+
 // Repository is the interface that wraps interfaces
 // providing CRUD operations for a MongoDB database.
 type Repository interface {
@@ -18,5 +20,5 @@ type Repository interface {
 
     // Type returns the underlying type of the documents in
     // the collection the Repository is able to access.
-    Type() interface{}
+    Type() reflect.Type
 }
