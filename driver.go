@@ -27,10 +27,8 @@ func NewDriver(url url.URL, database string) *Driver {
 // OpenConnection establishes a connection to the database.
 //
 // It fails if there is an internal MongoDB error.
-//
 func (driver *Driver) OpenConnection(ctx context.Context) error {
     var err error
-
     opts := driver.Options
 
     if opts.GetURI() == "" {
@@ -39,19 +37,16 @@ func (driver *Driver) OpenConnection(ctx context.Context) error {
     }
 
     driver.Client, err = mongo.Connect(ctx, opts)
-
     return err
 }
 
 // CloseConnection disconnects from the database.
 //
 // It fails if there is an internal MongoDB error.
-//
 func (driver *Driver) CloseConnection(ctx context.Context) error {
     if driver.Client == nil {
         return nil
     }
-
     return driver.Client.Disconnect(ctx)
 }
 
@@ -60,6 +55,5 @@ func (driver *Driver) IsAlive(ctx context.Context) bool {
     if driver.Client == nil {
         return false
     }
-
     return driver.Client.Ping(ctx, nil) != nil
 }

@@ -1,7 +1,7 @@
 package interfaces
 
-// Repository is the interface that wraps interfaces providing basic interactions
-// with collections in a MongoDB database.
+// Repository is the interface that wraps interfaces
+// providing CRUD operations for a MongoDB database.
 type Repository interface {
 
     // See Findable
@@ -16,7 +16,7 @@ type Repository interface {
     // See Deletable
     Deletable
 
-    // Type returns the underlying type of the documents in the collection the
-    // Repository is able to access.
+    // Type returns the underlying type of the documents in
+    // the collection the Repository is able to access.
     Type() interface{}
 }
