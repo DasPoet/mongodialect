@@ -13,18 +13,18 @@ import (
 )
 
 var (
-    // ErrorDriverNil occurs when a given driver is nil.
-    ErrorDriverNil = errors.New("driver must no be nil")
+    // ErrDriverNil occurs when a given driver is nil.
+    ErrDriverNil = errors.New("driver must no be nil")
 
-    // ErrorCollectionEmpty occurs when the name of a given collection is empty.
-    ErrorCollectionEmpty = errors.New("collection must not be empty")
+    // ErrCollectionEmpty occurs when the name of a given collection is empty.
+    ErrCollectionEmpty = errors.New("collection must not be empty")
 
-    // ErrorDocumentNotFound occurs when a lookup does not yield a result.
-    ErrorDocumentNotFound = errors.New("document was not found")
+    // ErrDocumentNotFound occurs when a lookup does not yield a result.
+    ErrDocumentNotFound = errors.New("document was not found")
 
-    // ErrorMultipleMatches occurs when a lookup
+    // ErrMultipleMatches occurs when a lookup
     // using a given ID yields more than one result.
-    ErrorMultipleMatches = errors.New("multiple matches for id")
+    ErrMultipleMatches = errors.New("multiple matches for id")
 )
 
 // A Repository wraps the Driver and provides
@@ -59,11 +59,11 @@ type Repository struct {
 // It also fails if collection is an empty string.
 func NewRepository(baseType reflect.Type, driver *Driver, collection string, idField string) (*Repository, error) {
     if driver == nil {
-        return nil, ErrorDriverNil
+        return nil, ErrDriverNil
     }
 
     if collection == "" {
-        return nil, ErrorCollectionEmpty
+        return nil, ErrCollectionEmpty
     }
 
     if kind := baseType.Kind(); kind != reflect.Ptr {
@@ -125,10 +125,10 @@ func (r *Repository) Find(ctx context.Context, f interfaces.Filter) ([]interface
 //     case the respective error is returned), or
 //
 //  2. if no document is found (in which case
-//     ErrorDocumentNotFound is returned), or
+//     ErrDocumentNotFound is returned), or
 //
 //  3. if multiple documents are found (in which
-//     case ErrorMultipleMatches is returned).
+//     case ErrMultipleMatches is returned).
 //
 func (r *Repository) FindByID(ctx context.Context, id interface{}) (interface{}, error) {
     matches, err := r.Find(ctx, map[string]interface{}{
@@ -141,9 +141,9 @@ func (r *Repository) FindByID(ctx context.Context, id interface{}) (interface{},
 
     switch l := len(matches); {
     case l == 0:
-        return nil, ErrorDocumentNotFound
+        return nil, ErrDocumentNotFound
     case l > 1:
-        return nil, ErrorMultipleMatches
+        return nil, ErrMultipleMatches
     }
     return matches[0], nil
 }
