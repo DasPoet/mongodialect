@@ -1,4 +1,4 @@
-module github.com/informatik-q2/mongodialect
+module github.com/daspoet/mongodialect
 
 go 1.14
 

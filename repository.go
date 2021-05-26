@@ -4,7 +4,7 @@ import (
     "context"
     "errors"
     "fmt"
-    "github.com/informatik-q2/mongodialect/interfaces"
+    "github.com/daspoet/mongodialect/interfaces"
     "github.com/mitchellh/mapstructure"
     "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/mongo"

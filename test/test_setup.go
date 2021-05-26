@@ -3,8 +3,8 @@ package test
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/informatik-q2/mongodialect"
-	"github.com/informatik-q2/mongodialect/interfaces"
+	"github.com/daspoet/mongodialect"
+	"github.com/daspoet/mongodialect/interfaces"
 	"reflect"
 )
 
